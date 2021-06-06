@@ -64,7 +64,8 @@ class RSP extends Component {
     clearInterval(this.interval)
   }
 
-  onClickBtn = (choice) => {
+  // 많이 쓰는 메소드 패턴(Higher-order function)
+  onClickBtn = (choice) => () => {
     const { imgCoord } = this.state
     clearInterval(this.interval) // 잠깐 멈춰서 결과 확인
     const myScore = scores[choice]
@@ -90,7 +91,7 @@ class RSP extends Component {
     }
     setTimeout(() => {
       this.interval = setInterval(this.changeHand, 100)
-    }, 2000)
+    }, 1000)
     
   }
 
@@ -100,9 +101,9 @@ class RSP extends Component {
       <>
         <div id="computer" style={{ background: `url(https://en.pimg.jp/023/182/267/1/23182267.jpg) ${imgCoord} 0` }} />
         <div>
-          <button id="rock" className="btn" onClick={() => this.onClickBtn('rock')}>바위</button>
-          <button id="scissor" className="btn" onClick={() => this.onClickBtn('scissor')}>가위</button>
-          <button id="paper" className="btn" onClick={() => this.onClickBtn('paper')}>보</button>
+          <button id="rock" className="btn" onClick={this.onClickBtn('rock')}>바위</button>
+          <button id="scissor" className="btn" onClick={this.onClickBtn('scissor')}>가위</button>
+          <button id="paper" className="btn" onClick={this.onClickBtn('paper')}>보</button>
         </div>
         <div>{result}</div>
         <div>현재 {score}점</div>
