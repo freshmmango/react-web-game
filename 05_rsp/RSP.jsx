@@ -24,12 +24,14 @@ const RSP = () => {
   const [score, setScore] = useState(0);
   const interval = useRef();
   
+  // useEffect의 경우 여러 개 선언 가능 -> state 값들을 나누어 다른 기능을 실행케 할 수 있음
+  // 100 ms마다 imgCoord가 바뀌므로 setInterval - clearInterval 반복됨
   useEffect(() => { // componentDidMount, componentDidUpdate 역할(1대1 대응은 아님)
     interval.current = setInterval(changeHand, 100)
     return () => { // componentWillUnmount 역할
       clearInterval(interval.current)
     }
-  }, [imgCoord]) // 배열: closure 문제 해결 (해당 값들이 바뀔 때 useEffect 실행)
+  }, [imgCoord]) // 배열: 해당 값들이 바뀔 때 useEffect 실행
 
   const changeHand = () => {
     if (imgCoord === rspCoords.rock) {
