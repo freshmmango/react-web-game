@@ -185,7 +185,8 @@ const reducer = (state, action) => {
       return {
         ...state,
         tableData,
-        halted: true
+        halted: true,
+        result: '패배하였습니다...'
       }
     }
     case FLAG_CELL: {
