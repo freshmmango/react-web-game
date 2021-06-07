@@ -67,32 +67,80 @@ const reducer = (state, action) => {
       }
     case OPEN_CELL: {
       const tableData = [...state.tableData]
-      const {row, cell} = action
+      const { row, cell } = action
+      const checked = [] // 한번 검사한 칸은 검사하지 않도록
 
       tableData[row] = [...tableData[row]]
+      // 자신 뿐만 아니라 주변의 값도 바뀔 것이므로 전부 새로 만듬
+      tableData.forEach((row, i) => {
+        tableData[i] = [...row]
+      })
 
-      let around = []
-      if (tableData[row - 1]) { // 내 윗줄이 있으면 윗줄 세칸을 검사 대상으로
+      // 재귀하여 탐색
+      const checkAround = (row, cell) => {
+        // 열린 칸 무시
+        if ([CODE.OPENED, CODE.FLAG_MINE, CODE.FLAG, CODE.QUESTION_MINE, CODE.QUESTION].includes(tableData[row][cell])) {
+          return
+        }
+        // 상하좌우 칸이 아닌 경우 무시
+        if (row < 0 || row >= tableData.length || cell < 0 || cell >= tableData[0].length) {
+          return
+        }
+        // 이미 검사한 칸이면 무시
+        if (checked.includes(row + '/' + cell)) {
+          return
+        } else {
+          checked.push(row + '/' + cell)
+        }
+
+        let around = []
+
+        if (tableData[row - 1]) { // 내 윗줄이 있으면 윗줄 세칸을 검사 대상으로
+          around = around.concat(
+            tableData[row - 1][cell - 1],
+            tableData[row - 1][cell],
+            tableData[row - 1][cell + 1]
+          )
+        }
         around = around.concat(
-          tableData[row - 1][cell - 1],
-          tableData[row - 1][cell],
-          tableData[row - 1][cell + 1]
+          tableData[row][cell - 1], tableData[row][cell + 1] // 좌우 칸이 없어도 아래 filter에서 무시되므로 괜찮음
         )
-      }
-      around = around.concat(
-        tableData[row][cell - 1], tableData[row][cell + 1]
-      )
-      if (tableData[row + 1]) { // 내 윗줄이 있으면 윗줄 세칸을 검사 대상으로
-        around = around.concat(
-          tableData[row + 1][cell - 1],
-          tableData[row + 1][cell],
-          tableData[row + 1][cell + 1]
-        )
+        if (tableData[row + 1]) { // 내 윗줄이 있으면 윗줄 세칸을 검사 대상으로
+          around = around.concat(
+            tableData[row + 1][cell - 1],
+            tableData[row + 1][cell],
+            tableData[row + 1][cell + 1]
+          )
+        }
+
+        const count = around.filter((v) => [CODE.MINE, CODE.FLAG_MINE, CODE.QUESTION_MINE].includes(v)).length;
+        tableData[row][cell] = count
+
+        if (count === 0) { // 주변 칸 오픈
+          const near = []
+          if (row - 1 > -1) {
+            near.push([row - 1, cell - 1])
+            near.push([row - 1, cell])
+            near.push([row - 1, cell + 1])
+          }
+          near.push([row, cell - 1])
+          near.push([row, cell + 1])
+          if (row + 1 < tableData.length) {
+            near.push([row + 1, cell - 1])
+            near.push([row + 1, cell])
+            near.push([row + 1, cell + 1])
+          }
+
+          // 주변 재귀 탐색
+          near.forEach((n) => {
+            if (tableData[n[0]][n[1]] !== CODE.OPENED) {
+              checkAround(n[0], n[1])
+            }
+          })
+        }
       }
 
-      const count = around.filter((v) => [CODE.MINE, CODE.FLAG_MINE, CODE.QUESTION_MINE].includes(v)).length;
-      tableData[row][cell] = count
-
+      checkAround(row, cell)
       return {
         ...state,
         tableData
