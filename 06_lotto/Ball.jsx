@@ -15,9 +15,9 @@ const Ball = memo(({ number }) => {
   }
 
   return (
-    <div>
+    <>
       <div className="ball" style={{ background }}>{number}</div>
-    </div>
+    </>
   )
 })
 
