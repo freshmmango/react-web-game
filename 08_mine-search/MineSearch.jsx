@@ -1,4 +1,4 @@
-import React, { useReducer, createContext, useMemo } from 'react';
+import React, { useEffect, useReducer, createContext, useMemo } from 'react';
 
 import Table from './Table'
 import Form from './Form'
@@ -16,13 +16,21 @@ export const CODE = {
 
 export const TableContext = createContext({
   tableData: [],
+  halted: true,
   dispatch: () => { }
 })
 
 const initialState = {
   tableData: [],
   timer: 0,
-  halted: true
+  data: {
+    row: 0,
+    cell: 0,
+    mine: 0
+  },
+  result: '',
+  halted: true,
+  openedCount: 0
 }
 
 const plantMine = (row, cell, mine) => {
@@ -56,6 +64,7 @@ export const CLICK_MINE = 'CLICK_MINE'
 export const FLAG_CELL = 'FLAG_CELL'
 export const QUESTION_CELL = 'QUESTION_CELL'
 export const NORMALIZE_CELL = 'NORMALIZE_CELL'
+export const INCREMENT_TIMER = 'INCREMENT_TIMER'
 
 const reducer = (state, action) => {
   switch (action.type) {
@@ -63,12 +72,21 @@ const reducer = (state, action) => {
       return {
         ...state,
         tableData: plantMine(action.row, action.cell, action.mine),
-        halted: false
+        timer: 0,
+        data: {
+          row: action.row,
+          cell: action.cell,
+          mine: action.mine
+        },
+        result : '',
+        halted: false,
+        openedCount: 0,
       }
     case OPEN_CELL: {
       const tableData = [...state.tableData]
       const { row, cell } = action
       const checked = [] // 한번 검사한 칸은 검사하지 않도록
+      let openedCount = 0
 
       tableData[row] = [...tableData[row]]
       // 자신 뿐만 아니라 주변의 값도 바뀔 것이므로 전부 새로 만듬
@@ -114,6 +132,9 @@ const reducer = (state, action) => {
         }
 
         const count = around.filter((v) => [CODE.MINE, CODE.FLAG_MINE, CODE.QUESTION_MINE].includes(v)).length;
+        if (tableData[row][cell] === CODE.NORMAL) { // 내 칸이 닫힌 칸이면 카운트 증가
+          openedCount += 1;
+        }
         tableData[row][cell] = count
 
         if (count === 0) { // 주변 칸 오픈
@@ -141,9 +162,20 @@ const reducer = (state, action) => {
       }
 
       checkAround(row, cell)
+
+      let halted = false
+      let result = ''
+      if (state.data.row * state.data.cell - state.data.mine === state.openedCount + openedCount) { // 승리
+        halted = true
+        result = `${state.timer}초 만에 승리하셨습니다!` 
+      }
+
       return {
         ...state,
-        tableData
+        tableData,
+        openedCount: state.openedCount + openedCount,
+        halted,
+        result
       }
     }
     case CLICK_MINE: {
@@ -195,6 +227,12 @@ const reducer = (state, action) => {
         tableData
       }
     }
+    case INCREMENT_TIMER: {
+      return {
+        ...state,
+        timer: state.timer + 1
+      }
+    }
     default:
       return state;
   }
@@ -202,18 +240,32 @@ const reducer = (state, action) => {
 
 const MineSearch = () => {
   const [state, dispatch] = useReducer(reducer, initialState)
-  const { tableData, timer, halted } = state
+  const { tableData, timer, halted, result } = state
 
   // Provider로 감싸주기
   // 매번 새로 render되지 않게 하기 위해 useMemo 사용
   const value = useMemo(
     () => ({ tableData, dispatch, halted }), [tableData, halted]
   )
+
+  useEffect(() => {
+    let timer
+    if (!halted) {
+      timer = setInterval(() => {
+        dispatch({type: INCREMENT_TIMER})
+      }, 1000)
+    }
+    return () => {
+      clearInterval(timer)
+    }
+  }, [halted])
+
   return (
     <TableContext.Provider value={value}>
       <Form />
-      <div>{timer}</div>
+      <h1>{timer}</h1>
       <Table />
+      <h1>{result}</h1>
     </TableContext.Provider>
   )
 }
