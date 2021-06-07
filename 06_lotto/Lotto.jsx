@@ -16,6 +16,7 @@ function getWinNumbers() {
 
 // useMemo: 복잡한 함수 결과값을 기억
 // useRef: 일반 값을 기억
+// use 시리즈는 순서가 중요함! 절대 조건문이나 함수, 반복문 안에 넣지 맙시다
 const Lotto = () => {
   const lottoNumbers = useMemo(() => getWinNumbers(), [])
   const [winNumbers, setWinNumbers] = useState(lottoNumbers);
@@ -44,6 +45,26 @@ const Lotto = () => {
   }, [timeouts.current]) // redo 시점에 timeouts.current가 바뀌므로 useEffect가 다시 실행됨
   // 빈 배열이면 componentDidMount와 동일
   // 배열에 요소가 있으면 componentDidMount와 componentDidUpdate 둘 다 수행
+
+  // useEffect는 여러개 선언 가능
+  useEffect(() => {
+    console.log('로또 숫자를 생성합니다.');
+  }, [winNumbers])
+
+  // use case) componentDidMount만 하고 싶다?
+  useEffect(() => {
+    // ...
+  }, [])
+
+  // use case) componentDidUpdate만 하고 싶다?
+  const mounted = useRef(false)
+  useEffect(() => {
+    if (!mounted.current) {
+      mounted.current = true
+    } else {
+      // ...
+    }
+  }, [/*대상 값*/])
 
   // useCallback: 함수를 기억
   // child에게 props로 전달할 함수는 useCallback을 꼭 붙여야 함! (자식이 매번 re-render 되어버리므로)
