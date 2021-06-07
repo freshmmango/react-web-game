@@ -5,7 +5,7 @@ import Form from './Form'
 
 export const CODE = {
   MINE: -7,
-  NORMAL : -1,
+  NORMAL: -1,
   QUESTION: -2,
   FLAG: -3,
   QUESTION_MINE: -4,
@@ -16,7 +16,7 @@ export const CODE = {
 
 export const TableContext = createContext({
   tableData: [],
-  dispatch: () => {}
+  dispatch: () => { }
 })
 
 const initialState = {
@@ -58,7 +58,6 @@ export const QUESTION_CELL = 'QUESTION_CELL'
 export const NORMALIZE_CELL = 'NORMALIZE_CELL'
 
 const reducer = (state, action) => {
-  console.log(action.type);
   switch (action.type) {
     case START_GAME:
       return {
@@ -68,8 +67,32 @@ const reducer = (state, action) => {
       }
     case OPEN_CELL: {
       const tableData = [...state.tableData]
-      tableData[action.row] = [...state.tableData[action.row]]
-      tableData[action.row][action.cell] = CODE.OPENED
+      const {row, cell} = action
+
+      tableData[row] = [...tableData[row]]
+
+      let around = []
+      if (tableData[row - 1]) { // 내 윗줄이 있으면 윗줄 세칸을 검사 대상으로
+        around = around.concat(
+          tableData[row - 1][cell - 1],
+          tableData[row - 1][cell],
+          tableData[row - 1][cell + 1]
+        )
+      }
+      around = around.concat(
+        tableData[row][cell - 1], tableData[row][cell + 1]
+      )
+      if (tableData[row + 1]) { // 내 윗줄이 있으면 윗줄 세칸을 검사 대상으로
+        around = around.concat(
+          tableData[row + 1][cell - 1],
+          tableData[row + 1][cell],
+          tableData[row + 1][cell + 1]
+        )
+      }
+
+      const count = around.filter((v) => [CODE.MINE, CODE.FLAG_MINE, CODE.QUESTION_MINE].includes(v)).length;
+      tableData[row][cell] = count
+
       return {
         ...state,
         tableData
@@ -90,7 +113,7 @@ const reducer = (state, action) => {
       tableData[action.row] = [...state.tableData[action.row]]
       if (tableData[action.row][action.cell] === CODE.MINE) {
         tableData[action.row][action.cell] = CODE.FLAG_MINE
-      } else{
+      } else {
         tableData[action.row][action.cell] = CODE.FLAG
       }
       return {
@@ -103,7 +126,7 @@ const reducer = (state, action) => {
       tableData[action.row] = [...state.tableData[action.row]]
       if (tableData[action.row][action.cell] === CODE.FLAG_MINE) {
         tableData[action.row][action.cell] = CODE.QUESTION_MINE
-      } else{
+      } else {
         tableData[action.row][action.cell] = CODE.QUESTION
       }
       return {
@@ -131,12 +154,12 @@ const reducer = (state, action) => {
 
 const MineSearch = () => {
   const [state, dispatch] = useReducer(reducer, initialState)
-  const {tableData, timer, halted} = state
+  const { tableData, timer, halted } = state
 
   // Provider로 감싸주기
   // 매번 새로 render되지 않게 하기 위해 useMemo 사용
   const value = useMemo(
-    () => ({tableData, dispatch, halted}), [tableData, halted]
+    () => ({ tableData, dispatch, halted }), [tableData, halted]
   )
   return (
     <TableContext.Provider value={value}>
