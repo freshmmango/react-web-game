@@ -4,10 +4,16 @@ import Table from './Table';
 const initialState = {
   winner: '',
   turn: 'O',
-  tableData: [['', '', ''],['', '', ''],['', '', '']]
+  tableData: [
+    ['', '', ''],
+    ['', '', ''],
+    ['', '', '']
+  ]
 }
 
-const SET_WINNER = 'SET_WINNER'
+export const SET_WINNER = 'SET_WINNER'
+export const CLICK_CELL = 'CLICK_CELL'
+export const CHANGE_TURN = 'CHANGE_TURN'
 
 // 액션을 실행(dispatch)할 때마다 reducer가 실행됨
 const reducer = (state, action) => {
@@ -18,6 +24,22 @@ const reducer = (state, action) => {
         ...state,
         winner: action.winner
       }
+    case CLICK_CELL: {
+      // 불변성 지키기
+      const tableData = [...state.tableData]
+      tableData[action.row] = [...tableData[action.row]] // immer라는 라이브러리로 가독성 해결
+      tableData[action.row][action.cell] = state.turn
+      return {
+        ...state,
+        tableData
+      }
+    }
+    case CHANGE_TURN: {
+      return {
+        ...state,
+        turn: state.turn === 'O' ? 'X' : 'O'
+      }
+    }
   }
 }
 
@@ -33,8 +55,8 @@ const TicTacToe = () => {
 
   return (
     <>
-      <Table onClick={onClickTable} tableData={state.tableData}/>
-      {state.winner && <div>{state.winner} 님의 승리</div>}
+      <Table onClick={onClickTable} tableData={state.tableData} dispatch={dispatch}/>
+      {state.winner && <h1>{state.winner} 님의 승리!</h1>}
     </>
   )
 
