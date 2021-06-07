@@ -23,7 +23,7 @@ export default class Lotto extends Component {
 
   timeouts = []
 
-  componentDidMount() {
+  runTimeouts = () => {
     const { winNumbers } = this.state
     for (let i = 0; i < winNumbers.length - 1; i++) {
       this.timeouts[i] = setTimeout(() => {
@@ -46,8 +46,29 @@ export default class Lotto extends Component {
     }, 8000)
   }
 
+  componentDidMount() {
+    this.runTimeouts()
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    // 조건 잘 걸어야 함!!
+    if (this.state.winBalls.length === 0) {
+      this.runTimeouts()
+    }
+  }
+
   componentWillUnmount() {
     this.timeouts.forEach((v) => { clearTimeout(v) })
+  }
+
+  onClickRedo = () => {
+    this.setState({
+      winNumbers: getWinNumbers(),
+      winBalls: [],
+      bonus: null,
+      redo: false
+    })
+    this.timeouts = []
   }
 
   render() {
